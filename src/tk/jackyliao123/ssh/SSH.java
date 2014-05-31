@@ -34,11 +34,20 @@ public class SSH {
 		session.setUserInfo(new Info());
 		session.setPassword(pass);
 	}
+	public int read() throws IOException{
+		int i = input.read();
+		System.out.print((char)i);
+		if(i == -1){
+			throw new IOException("SSH closed");
+		}
+		return i;
+	}
 	public void connectSession() throws JSchException{
 		session.connect();
 	}
 	public void openChannel() throws JSchException, IOException{
 		channel = (ChannelShell)session.openChannel("shell");
+		channel.setPtyType("xterm");
 
 		input = channel.getInputStream();
 		
