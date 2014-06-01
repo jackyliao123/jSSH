@@ -1,14 +1,6 @@
 package tk.jackyliao123.ssh;
 
-import java.awt.Canvas;
-import java.awt.Color;
-import java.awt.Cursor;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.FontMetrics;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
@@ -26,7 +18,9 @@ public class SSHCanvas extends Canvas{
 		this.terminal = terminal;
 		buffer = terminal.buffer;
 		styles = terminal.styles;
-		addKeyListener(new KeyListener(ssh));
+		KeyListener listener = new KeyListener(ssh);
+		addKeyListener(listener);
+		KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventPostProcessor(listener);
 		setPreferredSize(new Dimension(terminal.consoleWidth * fontWidth, terminal.consoleHeight * fontHeight));
 		setBackground(Color.black);
 		setCursor(new Cursor(Cursor.TEXT_CURSOR));
