@@ -87,8 +87,8 @@ public class Terminal {
 			cursorX = 0;
 		}
 		while(cursorY >= buffer.size()){
-			buffer.add(new byte[consoleWidth + 1]);
-			styles.add(new int[consoleWidth + 1]);
+			buffer.add(new byte[consoleWidth]);
+			styles.add(new int[consoleWidth]);
 		}
 	}
 }

@@ -12,7 +12,8 @@ public class Style {
 	UNDERLINE = 0x04,
 	CROSSED = 0x08,
 	CONCEAL = 0x10,
-	NEGATIVE = 0x20;
+	NEGATIVE = 0x20,
+	USE_PALETTE = 0x40;
 	
 	public static final byte DEFAULT_STYLE = PLAIN;
 	public static final byte DEFAULT_FG = 7;
@@ -35,6 +36,9 @@ public class Style {
 	}
 	public static byte setNegative(boolean negative, byte style){
 		return (byte)(negative ? style | NEGATIVE : style & ~NEGATIVE);
+	}
+	public static byte setUsePalette(boolean usePalette, byte style){
+		return (byte)(usePalette ? style | USE_PALETTE : style & ~USE_PALETTE);
 	}
 	
 	public static byte getForeground(byte color){
@@ -60,6 +64,9 @@ public class Style {
 	}
 	public static boolean getNegative(byte style){
 		return (style & NEGATIVE) != 0;
+	}
+	public static boolean getUsePalette(byte style){
+		return (style & USE_PALETTE) != 0;
 	}
 	
 	public static int encodeFormat(byte style, byte fg, byte bg){

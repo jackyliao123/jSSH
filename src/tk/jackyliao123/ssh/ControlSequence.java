@@ -209,11 +209,13 @@ public class ControlSequence {
 			case 49:
 				terminal.bg = Style.DEFAULT_BG;
 			default:
+				boolean intense = Style.getBold(terminal.style);
+				terminal.style = Style.setUsePalette(false, terminal.style);
 				if(value >= 30 && value <= 37){
-					terminal.fg = (byte)(value - 30);
+					terminal.fg = (byte)(value - 30 + (intense ? 8 : 0));
 				}
 				else if(value >= 40 && value <= 47){
-					terminal.bg = (byte)(value - 40);
+					terminal.bg = (byte)(value - 40 + (intense ? 8 : 0));
 				}
 				break;
 			}
