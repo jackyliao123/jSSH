@@ -53,8 +53,8 @@ public class SSHCanvas extends Canvas{
 			for(int j = 0; j < b.length; j ++){
 				if(b[j] != 0){
 					byte style = Style.decodeStyle(s[j]);
-					int fg = ColorPalette.COLOR_256[Style.decodeFg(s[j])];
-					int bg = ColorPalette.COLOR_256[Style.decodeBg(s[j])];
+					int fg = ColorPalette.decodeColor(Style.decodeFg(s[j]), Style.getUsePalette(style));
+					int bg = ColorPalette.decodeColor(Style.decodeBg(s[j]), Style.getUsePalette(style));
 					if(Style.getNegative(style)){
 						g.setColor(new Color(fg));
 						g.fillRect(j * fontWidth, (i - terminal.scroll) * fontHeight, fontWidth, fontHeight);
@@ -77,8 +77,8 @@ public class SSHCanvas extends Canvas{
 			for(int j = 0; j < b.length; j ++){
 				if(b[j] != 0){
 					byte style = Style.decodeStyle(s[j]);
-					int fg = ColorPalette.COLOR_256[Style.decodeFg(s[j])];
-					int bg = ColorPalette.COLOR_256[Style.decodeBg(s[j])];
+					int fg = ColorPalette.decodeColor(Style.decodeFg(s[j]), Style.getUsePalette(style));
+					int bg = ColorPalette.decodeColor(Style.decodeBg(s[j]), Style.getUsePalette(style));
 					if(Style.getBold(style))
 						style |= Font.BOLD;
 					if(Style.getItalic(style))
