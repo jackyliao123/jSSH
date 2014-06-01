@@ -6,7 +6,7 @@ public class StringBuffer{
 	public StringBuffer(int charSize){
 		chars = new byte[charSize];
 	}
-	public StringBuffer(){
+	public StringBuffer(){ 
 		chars = new byte[16];
 	}
 	public static byte toLowercase(byte c){
@@ -16,7 +16,7 @@ public class StringBuffer{
 		return c;
 	}
 	private void checkSize(){
-		if(length + 1 < chars.length){
+		if(length + 1 > chars.length){
 			byte[] temp = chars;
 			chars = new byte[chars.length * 2 + 1];
 			System.arraycopy(temp, 0, chars, 0, temp.length);
@@ -69,14 +69,9 @@ public class StringBuffer{
 		return new String(chars, 0, length);
 	}
 	public int toInt(int def){
-//		if(length == 0){
-//			return def;
-//		}
-		try{
-			return Integer.parseInt(toString());
-		}
-		catch(NumberFormatException e){
+		if(length == 0){
 			return def;
 		}
+		return Integer.parseInt(toString());
 	}
 }

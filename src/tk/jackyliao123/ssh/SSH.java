@@ -1,5 +1,6 @@
 package tk.jackyliao123.ssh;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -37,8 +38,11 @@ public class SSH {
 	public int read() throws IOException{
 		int i = input.read();
 		System.out.print((char)i);
+		if(i < 32 || i > 126){
+			System.out.print("<" + i + ">");
+		}
 		if(i == -1){
-			throw new IOException("SSH closed");
+			throw new EOFException("SSH closed");
 		}
 		return i;
 	}
@@ -48,12 +52,13 @@ public class SSH {
 	public void openChannel() throws JSchException, IOException{
 		channel = (ChannelShell)session.openChannel("shell");
 		channel.setPtyType("xterm");
-
 		input = channel.getInputStream();
-		
 		output = channel.getOutputStream();
-		
 		channel.connect(3000);
+	}
+	public void closeChannel(){
+		channel.disconnect();
+		session.disconnect();
 	}
 	class Info implements UserInfo{
 		public String getPassphrase(){

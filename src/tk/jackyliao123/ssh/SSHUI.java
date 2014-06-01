@@ -10,145 +10,54 @@ import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.Toolkit;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
+import java.io.EOFException;
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class SSHUI{
-	private SSH ssh;
-	public int cursorX;
-	public int cursorY;
-	public int consoleWidth = 80;
-	public int consoleHeight = 25;
-	public boolean cursor = true;
+	public SSH ssh;
+	public Terminal terminal;
 	public SSHCanvas canvas;
+	private Frame frame;
+	public DataReaderThread reader;
+	public SSHUI(SSH ssh){
+		this.ssh = ssh;
+		terminal = new Terminal(ssh);
+		reader = new DataReaderThread(terminal);
+	}
 	public void showWindow(){
-		Frame frame = new Frame("jSSH");
-		canvas = new SSHCanvas();
+		frame = new Frame("jSSH");
+		canvas = new SSHCanvas(terminal);
+		terminal.command = new CommandListener(frame, canvas);
 
 		frame.add(canvas);
 		frame.pack();
 		frame.setLocationRelativeTo(null);
-		frame.addWindowListener(new WindowListener());
+		frame.addWindowListener(new WindowListener(ssh));
 		frame.setVisible(true);
+	}
+	public void startReader(){
+		reader.start();
 	}
 	public static void main(String[] args){
 		try{
-			SSHUI sshui = new SSHUI();
-			sshui.ssh = new SSH("vps.lolzballs.cf", 22, "jackyliao123", "hello123");
-			sshui.ssh.connectSession();
-			sshui.ssh.openChannel();
+			SSH ssh = new SSH("192.168.2.17", 22, "pi", "raspberry");
+			ssh.connectSession();
+			ssh.openChannel();
+			SSHUI sshui = new SSHUI(ssh);
 			sshui.showWindow();
+			sshui.startReader();
 		}
 		catch(Exception e){
 			e.printStackTrace();
 			System.exit(1);
-		}
-	}
-	StringBuffer b = new StringBuffer();
-	private class InputReader extends Thread{
-		public void run(){
-			try{
-				int i;
-				l:
-				while((i = ssh.input.read()) != -1){
-					if(i == 27){
-						i = ssh.input.read();
-						if(i == -1){
-							break;
-						}
-						else if(i == '['){
-							StringBuffer escape = new StringBuffer();
-							while((i = ssh.input.read()) != -1){
-								if('A' <= i && i <= 'Z' || 'a' <= i && i <= 'z'){
-									i = ssh.input.read();
-									if(i == -1){
-										break l;
-									}
-									break;
-								}
-								else{
-									escape.append((char)i);
-								}
-							}
-							if(i == -1){
-								break;
-							}
-							//System.out.println(escape);
-						}
-					}
-					if(true){
-						if(!(32 <= i && i <= 126 || i == '\r' || i == '\n')){
-							System.out.println(i);
-						}
-						b.append((char)i);
-						String[] lines = b.toString().split("\n");
-						cursorX = lines[lines.length - 1].length();
-						cursorY = lines.length > consoleHeight ? consoleHeight - 1 : (lines.length - 1);
-						canvas.repaint();
-					}
-				}
-				System.exit(0);
-			}
-			catch(Exception e){
-				e.printStackTrace();
-			}
-		}
-	}
-	private class SSHCanvas extends Canvas{
-		public SSHCanvas(){
-			addKeyListener(new KeyListener());
-			setPreferredSize(new Dimension(640, 300));
-			setBackground(Color.black);
-			setCursor(new Cursor(Cursor.TEXT_CURSOR));
-			new InputReader().start();
-		}
-		public void paint(Graphics g){
-			g.setColor(new Color(0, 255, 0));
-			if(cursor)
-				g.fillRect(cursorX * 8, cursorY * 12, 8, 13);
-			else
-				g.drawRect(cursorX * 8, cursorY * 12, 8, 13);
-			
-			((Graphics2D)g).setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
-			g.setColor(new Color(187, 187, 187));
-			g.setFont(new Font("Courier New", Font.PLAIN, 13));
-			FontMetrics fm = g.getFontMetrics();
-			String[] strings = b.toString().split("\n");
-			for(int i = 0; i < consoleHeight; i ++){
-				String s = "";
-				if(strings.length > consoleHeight){
-					s = strings[strings.length - consoleHeight + i];
-				}
-				else{
-					if(i < strings.length){
-						s = strings[i];
-					}
-				}
-				for(int j = 0; j < s.length(); j ++){
-					g.drawString(s.charAt(j) + "", j * 8, fm.getAscent() - 1 + i * 12);
-				}
-			}
-		}
-	}
-	private class KeyListener extends KeyAdapter{
-		public void keyTyped(KeyEvent e){
-			try {
-				ssh.output.write(e.getKeyChar());
-				ssh.output.flush();
-			}
-			catch (IOException ex) {
-				ex.printStackTrace();
-			}
-		}
-	}
-	private class WindowListener extends WindowAdapter{
-		public void windowClosing(WindowEvent e){
-			ssh.channel.disconnect();
-			ssh.session.disconnect();
 		}
 	}
 }

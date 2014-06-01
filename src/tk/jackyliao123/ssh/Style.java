@@ -3,6 +3,8 @@ package tk.jackyliao123.ssh;
 import java.awt.Color;
 
 public class Style {
+	private Style(){
+	}
 	public static final byte 
 	PLAIN = 0x0,
 	BOLD = 0x01,
@@ -12,67 +14,29 @@ public class Style {
 	CONCEAL = 0x10,
 	NEGATIVE = 0x20;
 	
-	public static final byte
-	BLACK = 0,
-	RED = 1,
-	GREEN = 2,
-	YELLOW = 3,
-	BLUE = 4,
-	MAGENTA = 5,
-	CYAN = 6,
-	WHITE = 7;
+	public static final byte DEFAULT_STYLE = PLAIN;
+	public static final byte DEFAULT_FG = 7;
+	public static final byte DEFAULT_BG = 0;
 	
-	public static final Color[] colors = new Color[]{
-		new Color(0, 0, 0),
-		new Color(187, 0, 0),
-		new Color(0, 187, 0),
-		new Color(187, 187, 0),
-		new Color(0, 0, 187),
-		new Color(187, 0, 187),
-		new Color(0, 187, 187),
-		new Color(187, 187, 187),
-	};
+	public static byte setBold(boolean bold, byte style){
+		return (byte)(bold ? style | BOLD : style & ~BOLD);
+	}
+	public static byte setItalic(boolean italic, byte style){
+		return (byte)(italic ? style | ITALIC : style & ~ITALIC);
+	}
+	public static byte setUnderline(boolean underline, byte style){
+		return (byte)(underline ? style | UNDERLINE : style & ~UNDERLINE);
+	}
+	public static byte setCrossed(boolean crossed, byte style){
+		return (byte)(crossed ? style | CROSSED : style & ~CROSSED);
+	}
+	public static byte setConceal(boolean conceal, byte style){
+		return (byte)(conceal ? style | CONCEAL : style & ~CONCEAL);
+	}
+	public static byte setNegative(boolean negative, byte style){
+		return (byte)(negative ? style | NEGATIVE : style & ~NEGATIVE);
+	}
 	
-	public static final byte DEFAULT_COLOR = WHITE;
-	
-	byte style = PLAIN;
-	byte color = DEFAULT_COLOR;
-	public void setBgFg(byte color){
-		this.color = color;
-	}
-	public void setForeground(byte color){
-		this.color = (byte)(this.color & 0xF0 | color & 0xF);
-	}
-	public void setBackground(byte color){
-		this.color = (byte)(this.color & 0x0F | (color & 0xF) << 4);
-	}
-	public byte getForeground(){
-		return (byte) (color & 0xF);
-	}
-	public byte getBackground(){
-		return (byte) (color >> 4);
-	}
-	public void setStyle(byte style){
-		this.style = style;
-	}
-	public void setBold(boolean bold){
-		style = (byte)(bold ? style | BOLD : style & ~BOLD);
-	}
-	public void setItalic(boolean italic){
-		style = (byte)(italic ? style | ITALIC : style & ~ITALIC);
-	}
-	public void setUnderline(boolean underline){
-		style = (byte)(underline ? style | UNDERLINE : style & ~UNDERLINE);
-	}
-	public void setCrossed(boolean crossed){
-		style = (byte)(crossed ? style | CROSSED : style & ~CROSSED);
-	}
-	public void setConceal(boolean conceal){
-		style = (byte)(conceal ? style | CONCEAL : style & ~CONCEAL);
-	}
-	public void setNegative(boolean negative){
-		style = (byte)(negative ? style | NEGATIVE : style & ~NEGATIVE);
-	}
 	public static byte getForeground(byte color){
 		return (byte) (color & 0xF);
 	}
@@ -97,10 +61,17 @@ public class Style {
 	public static boolean getNegative(byte style){
 		return (style & NEGATIVE) != 0;
 	}
-	public Style clone(){
-		Style style = new Style();
-		style.color = color;
-		style.style = this.style;
-		return style;
+	
+	public static int encodeFormat(byte style, byte fg, byte bg){
+		return style << 16 | fg << 8 | bg;
+	}
+	public static byte decodeStyle(int format){
+		return (byte)(format >> 16 & 0xFF);
+	}
+	public static int decodeFg(int format){
+		return format >> 8 & 0xFF;
+	}
+	public static int decodeBg(int format){
+		return format & 0xFF;
 	}
 }
