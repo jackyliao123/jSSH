@@ -34,8 +34,10 @@ public class Terminal {
 	}
 	public void clearlBefore(){
 		checkCursorBounds();
+		if(cursorX >= consoleWidth)
+			cursorX = consoleWidth - 1;
 		byte[] buf = buffer.get(cursorY);
-		for(int i = 0; i < cursorX; i ++){
+		for(int i = 0; i <= cursorX; i ++){
 			buf[i] = 0;
 		}
 	}
@@ -55,9 +57,11 @@ public class Terminal {
 	}
 	public void clearBefore(){
 		clearlBefore();
-		while(buffer.size() > cursorY){
-			buffer.remove(0);
-			styles.remove(0);
+		for(int i = 0; i < cursorY; i ++){
+			byte[] b = buffer.get(i);
+			for(int j = 0; j < consoleWidth; j ++){
+				b[j] = 0;
+			}
 		}
 	}
 	public void clearAll(){
@@ -76,8 +80,8 @@ public class Terminal {
 		}
 	}
 	public void checkCursorBounds(){
-		if(cursorX >= consoleWidth + 1){
-			cursorX = consoleWidth;
+		if(cursorX >= consoleWidth){
+			cursorX = consoleWidth - 1;
 		}
 		while(cursorX < 0){
 			cursorX = 0;
@@ -90,5 +94,22 @@ public class Terminal {
 			buffer.add(new byte[consoleWidth]);
 			styles.add(new int[consoleWidth]);
 		}
+	}
+	public void insertBlank(int chars){
+		chars = Math.min(chars, consoleWidth - cursorX);
+		checkCursorBounds();
+		byte[] b = buffer.get(cursorY);
+		System.arraycopy(b, cursorX, b, cursorX + chars, consoleWidth - cursorX - chars);
+		for(int i = cursorX; i < cursorX + chars; i ++){
+			b[i] = 0;
+		}
+	}
+	public void deleteChars(int chars) {
+		checkCursorBounds();
+		chars = Math.min(chars, consoleWidth - cursorX);
+		byte[] b = buffer.get(cursorY);
+		int[] format = styles.get(cursorY);
+		System.arraycopy(b, cursorX + chars, b, cursorX, consoleWidth - cursorX - chars);
+		System.arraycopy(format, cursorX + chars, format, cursorX, consoleWidth - cursorX - chars);
 	}
 }

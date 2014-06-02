@@ -22,8 +22,85 @@ public class ControlSequence {
 		case ']':
 			processOSC();
 			break;
+		case ' ':
+			ssh.read();
+			break;
+		case '#':
+			if(ssh.read() == '8'){
+				while(terminal.buffer.size() < terminal.consoleHeight){
+					terminal.buffer.add(new byte[terminal.consoleWidth]);
+					terminal.styles.add(new int[terminal.consoleWidth]);
+				}
+				for(int y = 0; y < terminal.buffer.size(); y ++){
+					byte[] b = terminal.buffer.get(y);
+					int[] s = terminal.styles.get(y);
+					for(int x = 0; x < terminal.consoleWidth; x ++){
+						b[x] = 'E';
+						s[x] = Style.encodeFormat(Style.DEFAULT_STYLE, Style.DEFAULT_FG, Style.DEFAULT_BG);
+					}
+				}
+			}
+			break;
+		case '%':
+			ssh.read();
+			break;
+		case '(':
+			ssh.read();
+			break;
+		case ')':
+			ssh.read();
+			break;
+		case '*':
+			ssh.read();
+			break;
+		case '+':
+			ssh.read();
+			break;
+		case '7':
+			saveCursorX = terminal.cursorX;
+			saveCursorY = terminal.cursorY;
+			break;
+		case '8':
+			terminal.cursorX = saveCursorX;
+			terminal.cursorY = saveCursorY;
+			break;
+		case 'E':
+			terminal.cursorY ++;
+			terminal.cursorX = 0;
+			break;
+		case 'D':
+			terminal.cursorY ++;
+			terminal.updateScroll();
+			break;
+		case 'M':
+			terminal.cursorY --;
+			terminal.updateScroll();
+			break;
+//		case '=':
+//		case '>':
+//		case 'F':
+//		case 'c':
+//		case 'l':
+//		case 'm':
+//		case 'n':
+//		case 'o':
+//		case '|':
+//		case '}':
+//		case '~':
+//		case 'H':
+//		case 'N':
+//		case 'O':
+//		case 'P':
+//		case 'V':
+//		case 'W':
+//		case 'X':
+//		case 'Z':
+//		case '\\':
+//		case '^':
+//		case '_':
+		default:
+			System.err.println(i);
 		}
-		
 	}
 	public void processOSC() throws IOException{
 		StringBuffer escape = new StringBuffer();
@@ -48,20 +125,23 @@ public class ControlSequence {
 		StringBuffer escape = new StringBuffer();
 		while(true){
 			int i = ssh.read();
-			if((i >= 'A' && i <= 'Z') || (i >= 'a' && i <= 'z')){
+			if((i >= 'A' && i <= 'Z') || (i >= 'a' && i <= 'z') || i == '@' || i == '{' || i == '|'){
 				StringBuffer[] s = escape.split();
 				switch (i){
+				case '@':
+					terminal.insertBlank(escape.toInt(1));
+					break;
 				case 'A':
-					terminal.cursorY -= escape.toInt(1);
+					terminal.cursorY -= Math.max(1, escape.toInt(1));
 					break;
 				case 'B':
-					terminal.cursorY += escape.toInt(1);
+					terminal.cursorY += Math.max(1, escape.toInt(1));
 					break;
 				case 'C':
-					terminal.cursorX += escape.toInt(1);
+					terminal.cursorX += Math.max(1, escape.toInt(1));
 					break;
 				case 'D':
-					terminal.cursorX -= escape.toInt(1);
+					terminal.cursorX -= Math.max(1, escape.toInt(1));
 					break;
 				case 'E':
 					terminal.cursorY += escape.toInt(1);
@@ -69,7 +149,7 @@ public class ControlSequence {
 					break;
 				case 'F':
 					terminal.cursorY -= escape.toInt(1);
-					terminal.cursorY = 0;
+					terminal.cursorX = 0;
 					break;
 				case 'G':
 					terminal.cursorX = escape.toInt(1) - 1;
@@ -122,6 +202,9 @@ public class ControlSequence {
 						terminal.cursorY = s[0].toInt(1) - 1;
 					}
 					break;
+				case 'P':
+					terminal.deleteChars(s[0].toInt(1));
+					break;
 				case 'n':
 					ssh.output.write(27);
 					ssh.output.write('[');
@@ -138,16 +221,25 @@ public class ControlSequence {
 					terminal.cursorX = saveCursorX;
 					terminal.cursorY = saveCursorY;
 					break;
-				case 'h':
-					
-					break;
 				case 'l':
-					
+					if(s[0].toString().equals("?25"))
+						terminal.cursor = false;
+					break;
+				case 'h':
+					if(s[0].toString().equals("?25"))
+						terminal.cursor = true;
 					break;
 				case 'm':
 					processSGR(s);
 					break;
+				case 'c':
+					ssh.sendEscapeString("[?c");
+					break;
+				default:
+					System.err.println("UNRECONIZED: ESC[" + escape + (char)i);
+					break;
 				}
+				terminal.checkCursorBounds();
 				if(terminal.command != null){
 					terminal.command.repaint();
 				}

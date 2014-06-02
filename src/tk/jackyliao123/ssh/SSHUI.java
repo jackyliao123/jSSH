@@ -42,6 +42,7 @@ public class SSHUI{
 		frame.setLocationRelativeTo(null);
 		frame.addWindowListener(new WindowListener(ssh));
 		frame.setVisible(true);
+		canvas.requestFocus();
 	}
 	public void startReader(){
 		reader.start();

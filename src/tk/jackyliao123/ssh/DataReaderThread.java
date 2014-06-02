@@ -35,20 +35,20 @@ public class DataReaderThread extends Thread{
 					toolkit.beep();
 				}
 				else if(i == 8){
+					terminal.checkCursorBounds();
 					--terminal.cursorX;
 				}
 				else{
 					terminal.checkCursorBounds();
-					if(i == ' ' && terminal.cursorX >= terminal.consoleWidth){
-						++terminal.cursorY;
-						terminal.updateScroll();
-						terminal.cursorX = 0;
-					}
-					else if(terminal.cursorX < terminal.consoleWidth){
-						terminal.updateScroll();
+					if(terminal.cursorX < terminal.consoleWidth){
 						terminal.buffer.get(terminal.cursorY)[terminal.cursorX] = (byte)i;
 						terminal.styles.get(terminal.cursorY)[terminal.cursorX] = Style.encodeFormat(terminal.style, terminal.fg, terminal.bg);
 						++terminal.cursorX;
+						if(terminal.cursorX >= terminal.consoleWidth){
+							++terminal.cursorY;
+							terminal.updateScroll();
+							terminal.cursorX = 0;
+						}
 					}
 				}
 				if(terminal.command != null){

@@ -15,6 +15,9 @@ public class KeyDecoder {
 			break;
 		case KeyEvent.VK_CAPS_LOCK:
 			break;
+		case KeyEvent.VK_DELETE:
+			sendEscapeString(output, "[3~");
+			break;
 		case KeyEvent.VK_UP:
 			sendEscapeString(output, "OA");
 			break;

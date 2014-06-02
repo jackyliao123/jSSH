@@ -14,7 +14,7 @@ import java.util.ArrayList;
 
 public class SSHCanvas extends Canvas{
 	public SSH ssh;
-	public Terminal terminal;
+	public static Terminal terminal;
 	private final ArrayList<byte[]> buffer;
 	private final ArrayList<int[]> styles;
 	
@@ -46,6 +46,8 @@ public class SSHCanvas extends Canvas{
 		String font = "Courier New";
 		int fontSize = 13;
 		
+		terminal.checkCursorBounds();
+		
 		FontMetrics fm = g.getFontMetrics();
 		for(int i = 0; i < terminal.buffer.size(); i ++){
 			byte[] b = buffer.get(i);
@@ -55,46 +57,33 @@ public class SSHCanvas extends Canvas{
 					byte style = Style.decodeStyle(s[j]);
 					int fg = ColorPalette.decodeColor(Style.decodeFg(s[j]), Style.getUsePalette(style));
 					int bg = ColorPalette.decodeColor(Style.decodeBg(s[j]), Style.getUsePalette(style));
-					if(Style.getNegative(style)){
+					boolean negative = Style.getNegative(style);
+					if(negative){
 						g.setColor(new Color(fg));
 						g.fillRect(j * fontWidth, (i - terminal.scroll) * fontHeight, fontWidth, fontHeight);
+						g.setColor(new Color(bg));
 					}
 					else{
 						g.setColor(new Color(bg));
 						g.fillRect(j * fontWidth, (i - terminal.scroll) * fontHeight, fontWidth, fontHeight);
-						
+						g.setColor(new Color(fg));
 					}
-				}
-			}
-		}
-		
-		g.setColor(new Color(0, 128, 0));
-		g.fillRect(terminal.cursorX * fontWidth, (terminal.cursorY - terminal.scroll) * fontHeight, fontWidth, fontHeight);
-		
-		for(int i = 0; i < buffer.size(); i ++){
-			byte[] b = buffer.get(i);
-			int[] s = styles.get(i);
-			for(int j = 0; j < b.length; j ++){
-				if(b[j] != 0){
-					byte style = Style.decodeStyle(s[j]);
-					int fg = ColorPalette.decodeColor(Style.decodeFg(s[j]), Style.getUsePalette(style));
-					int bg = ColorPalette.decodeColor(Style.decodeBg(s[j]), Style.getUsePalette(style));
+					
 					if(Style.getBold(style))
 						style |= Font.BOLD;
 					if(Style.getItalic(style))
 						style |= Font.ITALIC;
 					g.setFont(new Font(font, style, fontSize));
 					
-					if(Style.getNegative(style)){
-						g.setColor(new Color(bg));
-					}
-					else{
-						g.setColor(new Color(fg));
-					}
-					
 					g.drawString(((char)b[j]) + "", j * fontWidth, fm.getAscent() - 1 + (i - terminal.scroll) * fontHeight);
 				}
 			}
+		}
+		if(terminal.cursor){
+			g.setColor(new Color(255, 255, 255));
+			g.setXORMode(new Color(0, 0, 0));
+			g.fillRect(terminal.cursorX * fontWidth, (terminal.cursorY - terminal.scroll) * fontHeight, fontWidth, fontHeight);
+			g.setPaintMode();
 		}
 	}
 }
