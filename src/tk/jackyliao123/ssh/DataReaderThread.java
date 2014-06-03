@@ -4,6 +4,8 @@ import java.awt.Toolkit;
 import java.io.EOFException;
 import java.io.IOException;
 
+import javax.swing.JOptionPane;
+
 public class DataReaderThread extends Thread{
 	public Toolkit toolkit = Toolkit.getDefaultToolkit();
 	public Terminal terminal;
@@ -80,6 +82,7 @@ public class DataReaderThread extends Thread{
 			System.exit(0);
 		}
 		catch(IOException e){
+			JOptionPane.showMessageDialog(null, "Error", "Connection Error: " + e.getMessage(), JOptionPane.ERROR_MESSAGE);
 			e.printStackTrace();
 		}
 	}

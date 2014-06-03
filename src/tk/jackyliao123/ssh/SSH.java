@@ -16,13 +16,6 @@ import com.jcraft.jsch.Session;
 import com.jcraft.jsch.UserInfo;
 
 public class SSH {
-	static{
-		try{
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		}
-		catch(Exception e){
-		}
-	}
 	public final Session session;
 	public ChannelShell channel;
 	public OutputStream output;

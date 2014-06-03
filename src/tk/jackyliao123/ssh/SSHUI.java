@@ -3,9 +3,18 @@ package tk.jackyliao123.ssh;
 import java.awt.Frame;
 
 import javax.swing.JOptionPane;
+import javax.swing.UIManager;
+
 import java.awt.*;
 
 public class SSHUI{
+	static{
+		try{
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		}
+		catch(Exception e){
+		}
+	}
 	public SSH ssh;
 	public Terminal terminal;
 	public SSHCanvas canvas;
@@ -34,7 +43,9 @@ public class SSHUI{
 	}
 	public static void main(String[] args){
 		try{
-			SSH ssh = new SSH(JOptionPane.showInputDialog("ip", "192.168.2.17"), Integer.parseInt(JOptionPane.showInputDialog("port", "22")), JOptionPane.showInputDialog("user", "pi"), JOptionPane.showInputDialog("password", "raspberry"));
+			PromptUI ui = new PromptUI();
+			ui.show();
+			SSH ssh = new SSH(ui.getHost(), ui.getPort(), ui.getUsername(), ui.getPassword());
 			ssh.connectSession();
 			ssh.openChannel();
 			SSHUI sshui = new SSHUI(ssh);
