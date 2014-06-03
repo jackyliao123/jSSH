@@ -1,25 +1,8 @@
 package tk.jackyliao123.ssh;
 
-import java.awt.Canvas;
-import java.awt.Color;
-import java.awt.Cursor;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.FontMetrics;
 import java.awt.Frame;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
-import java.awt.Toolkit;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.image.BufferStrategy;
-import java.awt.image.BufferedImage;
-import java.io.EOFException;
-import java.io.IOException;
-import java.util.ArrayList;
+
+import javax.swing.JOptionPane;
 
 public class SSHUI{
 	public SSH ssh;
@@ -35,13 +18,14 @@ public class SSHUI{
 	public void showWindow(){
 		frame = new Frame("jSSH");
 		canvas = new SSHCanvas(terminal);
-		terminal.command = new CommandListener(frame, canvas);
+		terminal.command = new CommandListener(frame, canvas, terminal);
 
 		frame.add(canvas);
+		frame.addWindowListener(new WindowListener(ssh));
+		frame.setResizable(false);
+		frame.setVisible(true);
 		frame.pack();
 		frame.setLocationRelativeTo(null);
-		frame.addWindowListener(new WindowListener(ssh));
-		frame.setVisible(true);
 		canvas.requestFocus();
 	}
 	public void startReader(){
@@ -49,7 +33,7 @@ public class SSHUI{
 	}
 	public static void main(String[] args){
 		try{
-			SSH ssh = new SSH("192.168.2.17", 22, "pi", "raspberry");
+			SSH ssh = new SSH(JOptionPane.showInputDialog("ip", "192.168.2.17"), Integer.parseInt(JOptionPane.showInputDialog("port", "22")), JOptionPane.showInputDialog("user", "pi"), JOptionPane.showInputDialog("password", "raspberry"));
 			ssh.connectSession();
 			ssh.openChannel();
 			SSHUI sshui = new SSHUI(ssh);

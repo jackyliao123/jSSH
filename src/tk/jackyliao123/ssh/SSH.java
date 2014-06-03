@@ -37,11 +37,10 @@ public class SSH {
 	}
 	public int read() throws IOException{
 		int i = input.read();
-		SSHCanvas.terminal.command.observer.repaint();
-		System.out.print((char)i);
-		if(i < 32 || i > 126){
-			System.out.print("<" + i + ">");
-		}
+//		System.out.print((char)i);
+//		if(i < 32 || i > 126){
+//			System.out.print("<" + i + ">");
+//		}
 		if(i == -1){
 			throw new EOFException("SSH closed");
 		}

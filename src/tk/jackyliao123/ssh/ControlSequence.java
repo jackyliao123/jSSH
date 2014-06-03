@@ -13,20 +13,20 @@ public class ControlSequence {
 		this.terminal = terminal;
 		ssh = terminal.ssh;
 	}
-	public void processControlSequence() throws IOException{
-		int i = ssh.read();
+	public void processControlSequence(DataReaderThread reader) throws IOException{
+		int i = reader.read();
 		switch(i){
 		case '[':
-			processCSI();
+			processCSI(reader);
 			break;
 		case ']':
-			processOSC();
+			processOSC(reader);
 			break;
 		case ' ':
-			ssh.read();
+			reader.read();
 			break;
 		case '#':
-			if(ssh.read() == '8'){
+			if(reader.read() == '8'){
 				while(terminal.buffer.size() < terminal.consoleHeight){
 					terminal.buffer.add(new byte[terminal.consoleWidth]);
 					terminal.styles.add(new int[terminal.consoleWidth]);
@@ -42,19 +42,19 @@ public class ControlSequence {
 			}
 			break;
 		case '%':
-			ssh.read();
+			reader.read();
 			break;
 		case '(':
-			ssh.read();
+			reader.read();
 			break;
 		case ')':
-			ssh.read();
+			reader.read();
 			break;
 		case '*':
-			ssh.read();
+			reader.read();
 			break;
 		case '+':
-			ssh.read();
+			reader.read();
 			break;
 		case '7':
 			saveCursorX = terminal.cursorX;
@@ -99,14 +99,14 @@ public class ControlSequence {
 //		case '^':
 //		case '_':
 		default:
-			System.err.println(i);
+			System.err.println((char)i);
 		}
 	}
-	public void processOSC() throws IOException{
+	public void processOSC(DataReaderThread reader) throws IOException{
 		StringBuffer escape = new StringBuffer();
 		while(true){
-			int i = ssh.read();
-			if((i == 27 && ssh.read() == '\\') || i == 7){
+			int i = reader.read();
+			if((i == 27 && reader.read() == '\\') || i == 7){
 				StringBuffer[] s = escape.split();
 				if(s.length == 2){
 					int v = s[0].toInt(0);
@@ -121,10 +121,10 @@ public class ControlSequence {
 			}
 		}
 	}
-	public void processCSI() throws IOException{
+	public void processCSI(DataReaderThread reader) throws IOException{
 		StringBuffer escape = new StringBuffer();
 		while(true){
-			int i = ssh.read();
+			int i = reader.read();
 			if((i >= 'A' && i <= 'Z') || (i >= 'a' && i <= 'z') || i == '@' || i == '{' || i == '|'){
 				StringBuffer[] s = escape.split();
 				switch (i){
@@ -224,10 +224,14 @@ public class ControlSequence {
 				case 'l':
 					if(s[0].toString().equals("?25"))
 						terminal.cursor = false;
+					else if(s[0].toString().equals("?3"))
+						terminal.command.setWindowWidth(80);
 					break;
 				case 'h':
 					if(s[0].toString().equals("?25"))
 						terminal.cursor = true;
+					else if(s[0].toString().equals("?3"))
+						terminal.command.setWindowWidth(132);
 					break;
 				case 'm':
 					processSGR(s);

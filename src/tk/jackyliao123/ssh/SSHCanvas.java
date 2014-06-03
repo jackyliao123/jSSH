@@ -12,9 +12,10 @@ import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
+@SuppressWarnings("serial")
 public class SSHCanvas extends Canvas{
 	public SSH ssh;
-	public static Terminal terminal;
+	public Terminal terminal;
 	private final ArrayList<byte[]> buffer;
 	private final ArrayList<int[]> styles;
 	

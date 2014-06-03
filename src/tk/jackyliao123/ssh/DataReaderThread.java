@@ -10,33 +10,54 @@ public class DataReaderThread extends Thread{
 	public SSH ssh;
 	public ControlSequence control;
 	public DataReaderThread(Terminal terminal){
+		setName("DataReaderThread");
 		this.terminal = terminal;
 		ssh = terminal.ssh;
 		control = new ControlSequence(terminal);
+	}
+	public int read() throws IOException{
+		int i;
+		while(true){
+			i = ssh.read();
+			if(i == 9){
+				++terminal.cursorX;
+			}
+			else if(i == '\n'){
+				++terminal.cursorY;
+				terminal.cursorX = 0;
+				terminal.updateScroll();
+			}
+			else if(i == 11){
+				++terminal.cursorY;
+			}
+			else if(i == '\r'){
+				terminal.cursorX = 0;
+				terminal.updateScroll();
+			}
+			else if(i == 8){
+				terminal.checkCursorBounds();
+				--terminal.cursorX;
+			}
+			else if(i < 32 && i != 27 && i != 7){
+				System.out.println(i);
+			}
+			else{
+				return i;
+			}
+		}
 	}
 	public void run(){
 		try{
 			int i = 0;
 			while(true){
-				i = ssh.read();
+				i = read();
 				if(i == 27){
-					control.processControlSequence();
-					continue;
-				}
-				if(i == '\n'){
-					++terminal.cursorY;
+					control.processControlSequence(this);
 					terminal.updateScroll();
-					terminal.cursorX = 0;
-				}
-				else if(i == '\r'){
-					terminal.cursorX = 0;
+					continue;
 				}
 				else if(i == 7){
 					toolkit.beep();
-				}
-				else if(i == 8){
-					terminal.checkCursorBounds();
-					--terminal.cursorX;
 				}
 				else{
 					terminal.checkCursorBounds();
@@ -46,7 +67,6 @@ public class DataReaderThread extends Thread{
 						++terminal.cursorX;
 						if(terminal.cursorX >= terminal.consoleWidth){
 							++terminal.cursorY;
-							terminal.updateScroll();
 							terminal.cursorX = 0;
 						}
 					}

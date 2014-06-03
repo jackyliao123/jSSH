@@ -112,4 +112,17 @@ public class Terminal {
 		System.arraycopy(b, cursorX + chars, b, cursorX, consoleWidth - cursorX - chars);
 		System.arraycopy(format, cursorX + chars, format, cursorX, consoleWidth - cursorX - chars);
 	}
+	public void resize(int width, int height) {
+		for(int i = 0; i < buffer.size(); i ++){
+			byte[] buffTemp = new byte[width];
+			int[] styleTemp = new int[width];
+			int length = Math.min(width, consoleWidth);
+			System.arraycopy(buffer.get(i), 0, buffTemp, 0, length);
+			System.arraycopy(styles.get(i), 0, styleTemp, 0, length);
+			buffer.set(i, buffTemp);
+			styles.set(i, styleTemp);
+		}
+		consoleWidth = width;
+		consoleHeight = height;
+	}
 }

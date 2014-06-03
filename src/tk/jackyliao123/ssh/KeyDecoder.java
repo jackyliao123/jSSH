@@ -15,6 +15,10 @@ public class KeyDecoder {
 			break;
 		case KeyEvent.VK_CAPS_LOCK:
 			break;
+		case KeyEvent.VK_BACK_SPACE:
+			output.write(0x7f);
+			output.flush();
+			break;
 		case KeyEvent.VK_DELETE:
 			sendEscapeString(output, "[3~");
 			break;

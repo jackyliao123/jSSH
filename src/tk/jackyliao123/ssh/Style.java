@@ -1,7 +1,5 @@
 package tk.jackyliao123.ssh;
 
-import java.awt.Color;
-
 public class Style {
 	private Style(){
 	}
