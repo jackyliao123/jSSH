@@ -3,6 +3,7 @@ package tk.jackyliao123.ssh;
 import java.awt.Frame;
 
 import javax.swing.JOptionPane;
+import java.awt.*;
 
 public class SSHUI{
 	public SSH ssh;
