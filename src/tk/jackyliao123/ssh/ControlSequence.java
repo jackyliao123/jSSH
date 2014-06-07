@@ -27,16 +27,12 @@ public class ControlSequence {
 			break;
 		case '#':
 			if(reader.read() == '8'){
-				while(terminal.buffer.size() < terminal.consoleHeight){
-					terminal.buffer.add(new byte[terminal.consoleWidth]);
-					terminal.styles.add(new int[terminal.consoleWidth]);
-				}
-				for(int y = 0; y < terminal.buffer.size(); y ++){
-					byte[] b = terminal.buffer.get(y);
-					int[] s = terminal.styles.get(y);
+				terminal.checkSize(terminal.consoleWidth - 1, terminal.consoleHeight - 1);
+				for(int y = 0; y < terminal.consoleHeight; y ++){
+					terminal.checkSize(terminal.consoleWidth - 1, y);
+					long[] b = terminal.buffer[y];
 					for(int x = 0; x < terminal.consoleWidth; x ++){
-						b[x] = 'E';
-						s[x] = Style.encodeFormat(Style.DEFAULT_STYLE, Style.DEFAULT_FG, Style.DEFAULT_BG);
+						b[x] = Style.encodeFormat((byte)'E', Style.DEFAULT_STYLE, Style.DEFAULT_FG, Style.DEFAULT_BG);
 					}
 				}
 			}
@@ -127,15 +123,22 @@ public class ControlSequence {
 			int i = reader.read();
 			if((i >= 'A' && i <= 'Z') || (i >= 'a' && i <= 'z') || i == '@' || i == '{' || i == '|'){
 				StringBuffer[] s = escape.split();
+				terminal.endOfLine = false;
 				switch (i){
 				case '@':
 					terminal.insertBlank(escape.toInt(1));
 					break;
 				case 'A':
 					terminal.cursorY -= Math.max(1, escape.toInt(1));
+					if(terminal.customScrollRegion && terminal.cursorY < terminal.scrollRegionMin){
+						terminal.cursorY = terminal.scrollRegionMin;
+					}
 					break;
 				case 'B':
 					terminal.cursorY += Math.max(1, escape.toInt(1));
+					if(terminal.customScrollRegion && terminal.cursorY >= terminal.scrollRegionMax){
+						terminal.cursorY = terminal.scrollRegionMax - 1;
+					}
 					break;
 				case 'C':
 					terminal.cursorX += Math.max(1, escape.toInt(1));
@@ -188,10 +191,10 @@ public class ControlSequence {
 					}
 					break;
 				case 'S':
-					terminal.scroll += escape.toInt(1);
+					terminal.scrollDown(s[0].toInt(1));
 					break;
 				case 'T':
-					terminal.scroll -= escape.toInt(1);
+					terminal.scrollUp(s[0].toInt(1));
 					break;
 				case 'f':
 					if(s.length >= 2){
@@ -201,6 +204,30 @@ public class ControlSequence {
 					else{
 						terminal.cursorY = s[0].toInt(1) - 1;
 					}
+					break;
+				case 'r':
+					if(s.length >= 2){
+						terminal.customScrollRegion = true;
+						terminal.scrollRegionMin = s[0].toInt(1) - 1;
+						terminal.scrollRegionMax = s[1].toInt(terminal.consoleHeight);
+						if(terminal.scrollRegionMin < 0){
+							terminal.scrollRegionMin = 0;
+						}
+						if(terminal.scrollRegionMax > terminal.consoleHeight){
+							terminal.scrollRegionMax = terminal.consoleHeight;
+						}
+						if(terminal.scrollRegionMin == 0 && terminal.scrollRegionMax == terminal.consoleHeight){
+							terminal.customScrollRegion = false;
+						}
+					}
+					else{
+						terminal.customScrollRegion = false;
+					}
+					terminal.cursorX = 0;
+					terminal.cursorY = 0;
+					break;
+				case 'd':
+					terminal.cursorY = s[0].toInt(1) - 1;
 					break;
 				case 'P':
 					terminal.deleteChars(s[0].toInt(1));
