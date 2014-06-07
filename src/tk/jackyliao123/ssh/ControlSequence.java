@@ -65,12 +65,10 @@ public class ControlSequence {
 			terminal.cursorX = 0;
 			break;
 		case 'D':
-			terminal.cursorY ++;
-			terminal.updateScroll();
+			terminal.curDownScroll(1);
 			break;
 		case 'M':
-			terminal.cursorY --;
-			terminal.updateScroll();
+			terminal.curUpScroll(1);
 			break;
 //		case '=':
 //		case '>':
@@ -129,16 +127,10 @@ public class ControlSequence {
 					terminal.insertBlank(escape.toInt(1));
 					break;
 				case 'A':
-					terminal.cursorY -= Math.max(1, escape.toInt(1));
-					if(terminal.customScrollRegion && terminal.cursorY < terminal.scrollRegionMin){
-						terminal.cursorY = terminal.scrollRegionMin;
-					}
+					terminal.curUp(Math.max(1, escape.toInt(1)));
 					break;
 				case 'B':
-					terminal.cursorY += Math.max(1, escape.toInt(1));
-					if(terminal.customScrollRegion && terminal.cursorY >= terminal.scrollRegionMax){
-						terminal.cursorY = terminal.scrollRegionMax - 1;
-					}
+					terminal.curDown(Math.max(1, escape.toInt(1)));
 					break;
 				case 'C':
 					terminal.cursorX += Math.max(1, escape.toInt(1));
@@ -147,11 +139,11 @@ public class ControlSequence {
 					terminal.cursorX -= Math.max(1, escape.toInt(1));
 					break;
 				case 'E':
-					terminal.cursorY += escape.toInt(1);
+					terminal.curDown(escape.toInt(1));
 					terminal.cursorX = 0;
 					break;
 				case 'F':
-					terminal.cursorY -= escape.toInt(1);
+					terminal.curUp(escape.toInt(1));
 					terminal.cursorX = 0;
 					break;
 				case 'G':
@@ -189,6 +181,12 @@ public class ControlSequence {
 					case 2:
 						terminal.clearlAll();
 					}
+					break;
+				case 'L':
+					terminal.insertRow(s[0].toInt(1));
+					break;
+				case 'M':
+					terminal.deleteRow(s[0].toInt(1));
 					break;
 				case 'S':
 					terminal.scrollDown(s[0].toInt(1));
@@ -249,16 +247,39 @@ public class ControlSequence {
 					terminal.cursorY = saveCursorY;
 					break;
 				case 'l':
-					if(s[0].toString().equals("?25"))
-						terminal.cursor = false;
-					else if(s[0].toString().equals("?3"))
-						terminal.command.setWindowWidth(80);
+					if(s[0].charAt(0) == '?'){
+						int n = s[0].subString(1).toInt(0);
+						switch (n){
+						case 3:
+							terminal.command.setWindowWidth(80);
+							break;
+						case 5:
+							terminal.reverseVideo = false;
+							break;
+						case 25:
+							terminal.cursor = false;
+							break;
+						}
+					}
 					break;
 				case 'h':
-					if(s[0].toString().equals("?25"))
-						terminal.cursor = true;
-					else if(s[0].toString().equals("?3"))
-						terminal.command.setWindowWidth(132);
+					if(s[0].charAt(0) == '?'){
+						int n = s[0].subString(1).toInt(0);
+						switch (n){
+						case 3:
+							terminal.command.setWindowWidth(132);
+							break;
+						case 5:
+							terminal.reverseVideo = true;
+							break;
+						case 25:
+							terminal.cursor = true;
+							break;
+						default:
+							System.err.println(n);
+							break;
+						}
+					}
 					break;
 				case 'm':
 					processSGR(s);
