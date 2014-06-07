@@ -45,7 +45,7 @@ public class PromptUI {
 		constraint.gridy = 0;
 		fields.add(new JLabel("Host: ", SwingConstants.RIGHT), constraint);
 		
-		host = new JTextField("192.168.2.17");
+		host = new JTextField("192.168.2.27");
 		host.addActionListener(connectListener);
 		constraint = new GridBagConstraints();
 		constraint.fill = GridBagConstraints.BOTH;

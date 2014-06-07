@@ -1,6 +1,5 @@
 package tk.jackyliao123.ssh;
 
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Frame;
 
@@ -22,7 +21,7 @@ public class CommandListener {
 			frame.setTitle(title);
 	}
 	public void setWindowWidth(int width){
-		terminal.resize(width, terminal.consoleHeight);
+		terminal.consoleWidth = width;
 		if(frame != null && observer != null){
 			observer.setPreferredSize(new Dimension(width * observer.fontWidth, terminal.consoleHeight * observer.fontHeight));
 			observer.setSize(observer.getPreferredSize());

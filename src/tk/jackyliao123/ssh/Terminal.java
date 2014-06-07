@@ -1,104 +1,123 @@
 package tk.jackyliao123.ssh;
 
-import java.util.ArrayList;
-
 public class Terminal {
 	public final SSH ssh;
 	public int cursorX;
 	public int cursorY;
+	public boolean customScrollRegion;
+	public int scrollRegionMin;
+	public int scrollRegionMax;
+	public boolean endOfLine;
+	public boolean wrapAround = true;
+	public boolean rWrapAround = false;
 	
 	public int consoleWidth = 80;
 	public int consoleHeight = 24;
 	
+	public long[][] buffer = new long[consoleHeight][consoleWidth];
+	
 	public boolean cursor = true;
-	public int scroll = 0;
 	
 	public byte fg = Style.DEFAULT_FG;
 	public byte bg = Style.DEFAULT_BG;
-	public byte style = Style.PLAIN;
-	
-	ArrayList<byte[]> buffer = new ArrayList<byte[]>();
-	ArrayList<int[]> styles = new ArrayList<int[]>();
+	public short style = Style.PLAIN;
 	
 	public CommandListener command;
 	
 	public Terminal(SSH ssh){
 		this.ssh = ssh;
 	}
+	public void checkCursorBounds(){
+		if(cursorX >= consoleWidth){
+			cursorX = consoleWidth - 1;
+		}
+		else if(cursorX < 0){
+			cursorX = 0;
+		}
+		if(cursorY >= consoleHeight){
+			cursorY = consoleHeight - 1;
+		}
+		else if(cursorY < 0){
+			cursorY = 0;
+		}
+		checkSize(cursorX, cursorY);
+	}
+	
+	public void checkSize(int posX, int posY){
+		if(posY >= buffer.length){
+			long[][] temp = buffer;
+			buffer = new long[posY + 1][consoleWidth];
+			System.arraycopy(temp, 0, buffer, 0, temp.length);
+		}
+		if(posX >= buffer[posY].length){
+			long[] temp = buffer[posY];
+			buffer[posY] = new long[posX + 1];
+			System.arraycopy(temp, 0, buffer[posY], 0, temp.length);
+		}
+	}
 	public void clearlAfter(){
 		checkCursorBounds();
-		byte[] buf = buffer.get(cursorY);
-		for(int i = cursorX; i < consoleWidth; i ++){
-			buf[i] = 0;
+		long[] b = buffer[cursorY];
+		for(int i = cursorX; i < b.length; i ++){
+			b[i] = 0;
 		}
 	}
 	public void clearlBefore(){
 		checkCursorBounds();
-		if(cursorX >= consoleWidth)
-			cursorX = consoleWidth - 1;
-		byte[] buf = buffer.get(cursorY);
+		long[] b = buffer[cursorY];
 		for(int i = 0; i <= cursorX; i ++){
-			buf[i] = 0;
+			b[i] = 0;
 		}
 	}
 	public void clearlAll(){
 		checkCursorBounds();
-		byte[] buf = buffer.get(cursorY);
-		for(int i = 0; i < consoleWidth; i ++){
-			buf[i] = 0;
-		}
+		buffer[cursorY] = new long[consoleWidth];
 	}
 	public void clearAfter(){
 		clearlAfter();
-		while(buffer.size() > cursorY + 1){
-			buffer.remove(buffer.size() - 1);
-			styles.remove(styles.size() - 1);
+		for(int i = cursorY + 1; i < buffer.length; i ++){
+			buffer[i] = new long[consoleWidth];
 		}
 	}
 	public void clearBefore(){
 		clearlBefore();
 		for(int i = 0; i < cursorY; i ++){
-			byte[] b = buffer.get(i);
-			for(int j = 0; j < consoleWidth; j ++){
-				b[j] = 0;
-			}
+			buffer[i] = new long[consoleWidth];
 		}
 	}
 	public void clearAll(){
-		while(buffer.size() > 0){
-			buffer.remove(buffer.size() - 1);
-		}
-		cursorX = 0;
-		cursorY = 0;
+		buffer = new long[consoleHeight][consoleWidth];
 	}
-	public void updateScroll(){
-		if(cursorY >= consoleHeight){
-			scroll = cursorY - consoleHeight + 1;
+	
+	public void scrollUp(int n){
+		if(!customScrollRegion){
+			scrollRegionMin = 0;
+			scrollRegionMax = consoleHeight;
 		}
-		else if(cursorY < scroll){
-			scroll = cursorY;
+		if(scrollRegionMax - scrollRegionMin > n){
+			System.arraycopy(buffer, scrollRegionMin, buffer, scrollRegionMin + n, scrollRegionMax - scrollRegionMin - n);
 		}
-	}
-	public void checkCursorBounds(){
-		if(cursorX >= consoleWidth){
-			cursorX = consoleWidth - 1;
-		}
-		while(cursorX < 0){
-			cursorX = 0;
-		}
-		if(cursorY < 0){
-			cursorY = 0;
-			cursorX = 0;
-		}
-		while(cursorY >= buffer.size()){
-			buffer.add(new byte[consoleWidth]);
-			styles.add(new int[consoleWidth]);
+		for(int i = scrollRegionMin; i < scrollRegionMin + n; i ++){
+			buffer[i] = new long[consoleWidth];
 		}
 	}
+	public void scrollDown(int n){
+		if(!customScrollRegion){
+			scrollRegionMin = 0;
+			scrollRegionMax = consoleHeight;
+		}
+		if(scrollRegionMax - scrollRegionMin > n){
+			System.arraycopy(buffer, scrollRegionMin + n, buffer, scrollRegionMin, scrollRegionMax - scrollRegionMin - n);
+		}
+		for(int i = scrollRegionMax - n; i < scrollRegionMax; i ++){
+			buffer[i] = new long[consoleWidth];
+		}
+	}
+	
 	public void insertBlank(int chars){
-		chars = Math.min(chars, consoleWidth - cursorX);
 		checkCursorBounds();
-		byte[] b = buffer.get(cursorY);
+		chars = Math.min(chars, consoleWidth - cursorX);
+		long[] b = buffer[cursorY];
 		System.arraycopy(b, cursorX, b, cursorX + chars, consoleWidth - cursorX - chars);
 		for(int i = cursorX; i < cursorX + chars; i ++){
 			b[i] = 0;
@@ -107,22 +126,10 @@ public class Terminal {
 	public void deleteChars(int chars) {
 		checkCursorBounds();
 		chars = Math.min(chars, consoleWidth - cursorX);
-		byte[] b = buffer.get(cursorY);
-		int[] format = styles.get(cursorY);
+		long[] b = buffer[cursorY];
 		System.arraycopy(b, cursorX + chars, b, cursorX, consoleWidth - cursorX - chars);
-		System.arraycopy(format, cursorX + chars, format, cursorX, consoleWidth - cursorX - chars);
 	}
-	public void resize(int width, int height) {
-		for(int i = 0; i < buffer.size(); i ++){
-			byte[] buffTemp = new byte[width];
-			int[] styleTemp = new int[width];
-			int length = Math.min(width, consoleWidth);
-			System.arraycopy(buffer.get(i), 0, buffTemp, 0, length);
-			System.arraycopy(styles.get(i), 0, styleTemp, 0, length);
-			buffer.set(i, buffTemp);
-			styles.set(i, styleTemp);
-		}
-		consoleWidth = width;
-		consoleHeight = height;
+	public void updateScroll() {
+		
 	}
 }

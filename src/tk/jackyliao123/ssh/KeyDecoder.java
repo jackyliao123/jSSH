@@ -15,8 +15,16 @@ public class KeyDecoder {
 			break;
 		case KeyEvent.VK_CAPS_LOCK:
 			break;
+		case KeyEvent.VK_ENTER:
+			output.write(0x0d);
+			output.flush();
+			break;
 		case KeyEvent.VK_BACK_SPACE:
 			output.write(0x7f);
+			output.flush();
+			break;
+		case KeyEvent.VK_ESCAPE:
+			output.write(0x1b);
 			output.flush();
 			break;
 		case KeyEvent.VK_DELETE:
@@ -47,22 +55,28 @@ public class KeyDecoder {
 			sendEscapeString(output, "OS");
 			break;
 		case KeyEvent.VK_F5:
-			sendEscapeString(output, "Ot");
+			sendEscapeString(output, "[15~");
 			break;
 		case KeyEvent.VK_F6:
-			sendEscapeString(output, "Ou");
+			sendEscapeString(output, "[17~");
 			break;
 		case KeyEvent.VK_F7:
-			sendEscapeString(output, "Ov");
+			sendEscapeString(output, "[18~");
 			break;
 		case KeyEvent.VK_F8:
-			sendEscapeString(output, "OI");
+			sendEscapeString(output, "[19~");
 			break;
 		case KeyEvent.VK_F9:
-			sendEscapeString(output, "Ow");
+			sendEscapeString(output, "[20~");
 			break;
 		case KeyEvent.VK_F10:
-			sendEscapeString(output, "Ox");
+			sendEscapeString(output, "[21~");
+			break;
+		case KeyEvent.VK_F11:
+			sendEscapeString(output, "[23~");
+			break;
+		case KeyEvent.VK_F12:
+			sendEscapeString(output, "[24~");
 			break;
 		default:
 			output.write(e.getKeyChar());

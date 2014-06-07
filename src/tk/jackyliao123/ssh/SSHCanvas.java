@@ -8,8 +8,6 @@ import java.util.ArrayList;
 public class SSHCanvas extends Canvas{
 	public SSH ssh;
 	public Terminal terminal;
-	private final ArrayList<byte[]> buffer;
-	private final ArrayList<int[]> styles;
 	
 	public int fontWidth = 8;
 	public int fontHeight = 16;
@@ -17,8 +15,6 @@ public class SSHCanvas extends Canvas{
 	public SSHCanvas(Terminal terminal){
 		this.ssh = terminal.ssh;
 		this.terminal = terminal;
-		buffer = terminal.buffer;
-		styles = terminal.styles;
 		KeyListener listener = new KeyListener(ssh);
 		addKeyListener(listener);
 		KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventPostProcessor(listener);
@@ -44,23 +40,24 @@ public class SSHCanvas extends Canvas{
 		terminal.checkCursorBounds();
 		
 		FontMetrics fm = g.getFontMetrics();
-		for(int i = 0; i < terminal.buffer.size(); i ++){
-			byte[] b = buffer.get(i);
-			int[] s = styles.get(i);
-			for(int j = 0; j < b.length; j ++){
-				if(b[j] != 0){
-					byte style = Style.decodeStyle(s[j]);
-					int fg = ColorPalette.decodeColor(Style.decodeFg(s[j]), Style.getUsePalette(style));
-					int bg = ColorPalette.decodeColor(Style.decodeBg(s[j]), Style.getUsePalette(style));
+		for(int i = 0; i < terminal.buffer.length; i ++){
+			long[] data = terminal.buffer[i];
+			for(int j = 0; j < data.length; j ++){
+				long buf = data[j];
+				if(buf != 0){
+					byte style = Style.decodeStyle(buf);
+					int fg = ColorPalette.decodeColor(Style.decodeFg(buf), Style.getUsePalette(style));
+					int bg = ColorPalette.decodeColor(Style.decodeBg(buf), Style.getUsePalette(style));
+					byte c = Style.decodeChar(buf);
 					boolean negative = Style.getNegative(style);
 					if(negative){
 						g.setColor(new Color(fg));
-						g.fillRect(j * fontWidth, (i - terminal.scroll) * fontHeight, fontWidth, fontHeight);
+						g.fillRect(j * fontWidth, i * fontHeight, fontWidth, fontHeight);
 						g.setColor(new Color(bg));
 					}
 					else{
 						g.setColor(new Color(bg));
-						g.fillRect(j * fontWidth, (i - terminal.scroll) * fontHeight, fontWidth, fontHeight);
+						g.fillRect(j * fontWidth, i * fontHeight, fontWidth, fontHeight);
 						g.setColor(new Color(fg));
 					}
 					
@@ -70,14 +67,14 @@ public class SSHCanvas extends Canvas{
 						style |= Font.ITALIC;
 					g.setFont(new Font(font, style, fontSize));
 					
-					g.drawString(((char)b[j]) + "", j * fontWidth, fm.getAscent() - 1 + (i - terminal.scroll) * fontHeight);
+					g.drawString(((char)c) + "", j * fontWidth, fm.getAscent() - 1 + i * fontHeight);
 				}
 			}
 		}
 		if(terminal.cursor){
 			g.setColor(new Color(255, 255, 255));
 			g.setXORMode(new Color(0, 0, 0));
-			g.fillRect(terminal.cursorX * fontWidth, (terminal.cursorY - terminal.scroll) * fontHeight, fontWidth, fontHeight);
+			g.fillRect(terminal.cursorX * fontWidth, terminal.cursorY * fontHeight, fontWidth, fontHeight);
 			g.setPaintMode();
 		}
 	}

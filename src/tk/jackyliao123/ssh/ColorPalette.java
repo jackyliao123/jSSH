@@ -1,7 +1,7 @@
 package tk.jackyliao123.ssh;
 
 public class ColorPalette {
-	public static final int decodeColor(int index, boolean usePalette){
+	public static final int decodeColor(short index, boolean usePalette){
 		return usePalette ? COLOR_256[index] : COLOR_16[index];
 	}
 	public static final int[] COLOR_16 = {

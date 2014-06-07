@@ -25,16 +25,19 @@ public class DataReaderThread extends Thread{
 				++terminal.cursorX;
 			}
 			else if(i == '\n'){
-				++terminal.cursorY;
 				terminal.cursorX = 0;
-				terminal.updateScroll();
+				if(terminal.customScrollRegion && terminal.cursorY == terminal.scrollRegionMax - 1){
+					terminal.scrollDown(1);
+				}
+				else{
+					++terminal.cursorY;
+				}
 			}
 			else if(i == 11){
 				++terminal.cursorY;
 			}
 			else if(i == '\r'){
 				terminal.cursorX = 0;
-				terminal.updateScroll();
 			}
 			else if(i == 8){
 				terminal.checkCursorBounds();
@@ -46,6 +49,7 @@ public class DataReaderThread extends Thread{
 			else{
 				return i;
 			}
+			terminal.command.repaint();
 		}
 	}
 	public void run(){
@@ -63,15 +67,21 @@ public class DataReaderThread extends Thread{
 				}
 				else{
 					terminal.checkCursorBounds();
-					if(terminal.cursorX < terminal.consoleWidth){
-						terminal.buffer.get(terminal.cursorY)[terminal.cursorX] = (byte)i;
-						terminal.styles.get(terminal.cursorY)[terminal.cursorX] = Style.encodeFormat(terminal.style, terminal.fg, terminal.bg);
-						++terminal.cursorX;
-						if(terminal.cursorX >= terminal.consoleWidth){
-							++terminal.cursorY;
-							terminal.cursorX = 0;
-						}
+					if(terminal.cursorX >= terminal.consoleWidth - 1 && !terminal.endOfLine){
+						terminal.endOfLine = true;
 					}
+					else if(terminal.endOfLine){
+						terminal.cursorX = 0;
+						if(terminal.customScrollRegion && terminal.cursorY == terminal.scrollRegionMax - 1){
+							terminal.scrollDown(1);
+						}
+						else{
+							++terminal.cursorY;
+						}
+						terminal.endOfLine = false;
+					}
+					terminal.buffer[terminal.cursorY][terminal.cursorX] = Style.encodeFormat((byte)i, terminal.style, terminal.fg, terminal.bg);
+					++terminal.cursorX;
 				}
 				if(terminal.command != null){
 					terminal.command.repaint();
