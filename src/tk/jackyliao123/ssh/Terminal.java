@@ -10,6 +10,7 @@ public class Terminal {
 	public boolean endOfLine;
 	public boolean wrapAround = true;
 	public boolean rWrapAround = false;
+	public boolean reverseVideo;
 	
 	public int consoleWidth = 80;
 	public int consoleHeight = 24;
@@ -53,6 +54,58 @@ public class Terminal {
 			long[] temp = buffer[posY];
 			buffer[posY] = new long[posX + 1];
 			System.arraycopy(temp, 0, buffer[posY], 0, temp.length);
+		}
+	}
+	public void curUp(int n){
+		if(customScrollRegion && cursorY >= scrollRegionMin){
+			cursorY -= n;
+			if(cursorY < scrollRegionMin){
+				cursorY = scrollRegionMin;
+			}
+		}
+		else{
+			cursorY -= n;
+		}
+	}
+	public void curDown(int n){
+		if(customScrollRegion && cursorY < scrollRegionMax){
+			cursorY += n;
+			if(cursorY >= scrollRegionMax){
+				cursorY = scrollRegionMax - 1;
+			}
+		}
+		else{
+			cursorY += n;
+		}
+	}
+	public void curUpScroll(int n){
+		if(customScrollRegion && cursorY >= scrollRegionMin){
+			cursorY -= n;
+			if(cursorY < scrollRegionMin){
+				scrollUp(scrollRegionMin - cursorY);
+				cursorY = scrollRegionMin;
+			}
+		}
+		else{
+			cursorY -= n;
+			if(cursorY < 0){
+				scrollUp(-cursorY);
+			}
+		}
+	}
+	public void curDownScroll(int n){
+		if(customScrollRegion && cursorY < scrollRegionMax){
+			cursorY += n;
+			if(cursorY >= scrollRegionMax){
+				scrollDown(cursorY - scrollRegionMax + 1);
+				cursorY = scrollRegionMax - 1;
+			}
+		}
+		else{
+			cursorY += n;
+			if(cursorY >= consoleHeight){
+				scrollDown(cursorY - consoleHeight + 1);
+			}
 		}
 	}
 	public void clearlAfter(){
@@ -128,8 +181,36 @@ public class Terminal {
 		chars = Math.min(chars, consoleWidth - cursorX);
 		long[] b = buffer[cursorY];
 		System.arraycopy(b, cursorX + chars, b, cursorX, consoleWidth - cursorX - chars);
+		for(int i = consoleWidth - chars; i < consoleWidth; i ++){
+			b[i] = 0;
+		}
 	}
-	public void updateScroll() {
-		
+	public void insertRow(int n){
+		checkCursorBounds();
+		if(!customScrollRegion){
+			scrollRegionMin = 0;
+			scrollRegionMax = consoleHeight;
+		}
+		if(cursorY >= scrollRegionMin && cursorY < scrollRegionMax){
+			if(scrollRegionMax - scrollRegionMin - n > 0){
+				System.arraycopy(buffer, cursorY, buffer, cursorY + n, scrollRegionMax - scrollRegionMin - n);
+			}
+			for(int i = cursorY; i < cursorY + n; i ++){
+				buffer[i] = new long[consoleWidth];
+			}
+		}
+	}
+	public void deleteRow(int n){
+		checkCursorBounds();
+		if(!customScrollRegion){
+			scrollRegionMin = 0;
+			scrollRegionMax = consoleHeight;
+		}
+		if(cursorY >= scrollRegionMin && cursorY < scrollRegionMax){
+			System.arraycopy(buffer, cursorY + n, buffer, cursorY, scrollRegionMax - scrollRegionMin - n);
+			for(int i = scrollRegionMax - n - 1; i < scrollRegionMax; i ++){
+				buffer[i] = new long[consoleWidth];
+			}
+		}
 	}
 }

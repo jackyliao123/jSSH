@@ -59,10 +59,16 @@ public class StringBuffer{
 		}
 		return -1;
 	}
-	private StringBuffer subString(int begin, int end){
+	public StringBuffer subString(int begin, int end){
 		StringBuffer sb = new StringBuffer(end - begin);
 		sb.length = end - begin;
 		System.arraycopy(chars, begin, sb.chars, 0, end - begin);
+		return sb;
+	}
+	public StringBuffer subString(int begin){
+		StringBuffer sb = new StringBuffer(length - begin);
+		sb.length = length - begin;
+		System.arraycopy(chars, begin, sb.chars, 0, length - begin);
 		return sb;
 	}
 	public String toString(){
@@ -73,5 +79,8 @@ public class StringBuffer{
 			return def;
 		}
 		return Integer.parseInt(toString());
+	}
+	public byte charAt(int i){
+		return chars[i];
 	}
 }

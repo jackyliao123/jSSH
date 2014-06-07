@@ -35,7 +35,7 @@ public class SSH {
 		catch(Exception e){}
 		System.out.print((char)i);
 		if(i < 32 || i > 126){
-			System.out.print("<" + i + ">");
+		//	System.out.print("<" + i + ">");
 		}
 		if(i == -1){
 			throw new EOFException("SSH closed");

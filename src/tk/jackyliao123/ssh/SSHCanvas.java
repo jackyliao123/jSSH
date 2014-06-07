@@ -25,8 +25,13 @@ public class SSHCanvas extends Canvas{
 	public void update(Graphics g){
 		BufferedImage image = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_3BYTE_BGR);
 		Graphics g1 = image.getGraphics();
-		g1.setColor(new Color(0, 0, 0));
-		g1.clearRect(0, 0, getWidth(), getHeight());
+		if(terminal.reverseVideo){
+			g1.setColor(new Color(ColorPalette.COLOR_16[7]));
+		}
+		else{
+			g1.setColor(new Color(0, 0, 0));
+		}
+		g1.fillRect(0, 0, getWidth(), getHeight());
 		paint(g1);
 		g.drawImage(image, 0, 0, null);
 		g1.dispose();
@@ -49,7 +54,7 @@ public class SSHCanvas extends Canvas{
 					int fg = ColorPalette.decodeColor(Style.decodeFg(buf), Style.getUsePalette(style));
 					int bg = ColorPalette.decodeColor(Style.decodeBg(buf), Style.getUsePalette(style));
 					byte c = Style.decodeChar(buf);
-					boolean negative = Style.getNegative(style);
+					boolean negative = Style.getNegative(style) ^ terminal.reverseVideo;
 					if(negative){
 						g.setColor(new Color(fg));
 						g.fillRect(j * fontWidth, i * fontHeight, fontWidth, fontHeight);

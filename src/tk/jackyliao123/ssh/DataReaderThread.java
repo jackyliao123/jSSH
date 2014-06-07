@@ -26,12 +26,7 @@ public class DataReaderThread extends Thread{
 			}
 			else if(i == '\n'){
 				terminal.cursorX = 0;
-				if(terminal.customScrollRegion && terminal.cursorY == terminal.scrollRegionMax - 1){
-					terminal.scrollDown(1);
-				}
-				else{
-					++terminal.cursorY;
-				}
+				terminal.curDownScroll(1);
 			}
 			else if(i == 11){
 				++terminal.cursorY;
@@ -59,7 +54,6 @@ public class DataReaderThread extends Thread{
 				i = read();
 				if(i == 27){
 					control.processControlSequence(this);
-					terminal.updateScroll();
 					continue;
 				}
 				else if(i == 7){
@@ -72,14 +66,10 @@ public class DataReaderThread extends Thread{
 					}
 					else if(terminal.endOfLine){
 						terminal.cursorX = 0;
-						if(terminal.customScrollRegion && terminal.cursorY == terminal.scrollRegionMax - 1){
-							terminal.scrollDown(1);
-						}
-						else{
-							++terminal.cursorY;
-						}
+						terminal.curDownScroll(1);
 						terminal.endOfLine = false;
 					}
+					terminal.checkCursorBounds();
 					terminal.buffer[terminal.cursorY][terminal.cursorX] = Style.encodeFormat((byte)i, terminal.style, terminal.fg, terminal.bg);
 					++terminal.cursorX;
 				}
